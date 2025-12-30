@@ -8,9 +8,9 @@
     ·
     <a href="#-changelog">📜 ChangeLog</a>
     ·
-    <a href="https://github.com/sexfrance/hcaptcha-challenger/issues">⚠️ Report Bug</a>
+    <a href="https://github.com/sexfrance/hcaptcha-scraper/issues">⚠️ Report Bug</a>
     ·
-    <a href="https://github.com/sexfrance/hcaptcha-challenger/issues">💡 Request Feature</a>
+    <a href="https://github.com/sexfrance/hcaptcha-scraper/issues">💡 Request Feature</a>
   </p>
 </div>
 
@@ -107,7 +107,7 @@ v1.0.0 ⋮ 12/30/2024
 ```
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/sexfrance/hcaptcha-challenger.svg?style=for-the-badge&labelColor=black&color=f429ff&logo=IOTA"/>
-  <img src="https://img.shields.io/github/stars/sexfrance/hcaptcha-challenger.svg?style=for-the-badge&labelColor=black&color=f429ff&logo=IOTA"/>
-  <img src="https://img.shields.io/github/languages/top/sexfrance/hcaptcha-challenger.svg?style=for-the-badge&labelColor=black&color=python"/>
+  <img src="https://img.shields.io/github/license/sexfrance/hcaptcha-scraper.svg?style=for-the-badge&labelColor=black&color=f429ff&logo=IOTA"/>
+  <img src="https://img.shields.io/github/stars/sexfrance/hcaptcha-scraper.svg?style=for-the-badge&labelColor=black&color=f429ff&logo=IOTA"/>
+  <img src="https://img.shields.io/github/languages/top/sexfrance/hcaptcha-scraper.svg?style=for-the-badge&labelColor=black&color=python"/>
 </p>
