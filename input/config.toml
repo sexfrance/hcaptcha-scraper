@@ -1,7 +1,7 @@
 [ dev ]
 Proxyless = true
 Debug = false
-Threads = 4
+Threads = 5
 minimal = true # Minimal logging: when true only `log.message` calls will be shown
 
 ignore_types = [] # Optional list of challenge types to ignore entirely (e.g. ["IMAGE_LABEL_SINGLE_SELECT"]) 

@@ -1,16 +1,16 @@
 <div align="center">
-  <h2 align="center">Title e.g: Crunchyroll Account Creator</h2>
+  <h2 align="center">hCaptcha Challenger</h2>
   <p align="center">
-    Description e.g: An automated tool for creating Crunchyroll accounts with email verification support, proxy handling, and multi-threading capabilities.
+    An automated tool for scraping and classifying hCaptcha challenges using Playwright/Patchright.
     <br />
     <br />
     <a href="https://discord.cyberious.xyz">💬 Discord</a>
     ·
     <a href="#-changelog">📜 ChangeLog</a>
     ·
-    <a href="https://github.com/sexfrance/Crunchyroll-Account-Creator/issues">⚠️ Report Bug</a>
+    <a href="https://github.com/sexfrance/hcaptcha-challenger/issues">⚠️ Report Bug</a>
     ·
-    <a href="https://github.com/sexfrance/Crunchyroll-Account-Creator/issues">💡 Request Feature</a>
+    <a href="https://github.com/sexfrance/hcaptcha-challenger/issues">💡 Request Feature</a>
   </p>
 </div>
 
@@ -18,84 +18,96 @@
 
 ### ⚙️ Installation
 
-- Requires: `Python 3.7+`
-- Make a python virtual environment: `python3 -m venv venv`
-- Source the environment: `venv\Scriptsctivate` (Windows) / `source venv/bin/activate` (macOS, Linux)
-- Install the requirements: `pip install -r requirements.txt`
+- Requires: `Python 3.8+`
+- Create a virtual environment:
+  ```bash
+  python -m venv venv
+  ```
+- Activate the environment:
+  - Windows: `venv\Scripts\activate`
+  - macOS/Linux: `source venv/bin/activate`
+- Install dependencies:
+  ```bash
+  pip install -r requirements.txt
+  playwright install chromium
+  ```
 
 ---
 
 ### 🔥 Features
 
-- Feature E.g: Email verification support using bune.pw email service
-- Feature E.g: Proxy support for avoiding rate limits
-- Feature E.g: Multi-threaded account generation
-- Feature E.g: Real-time creation tracking with console title updates
-- Feature E.g: Configurable thread count
-- Feature E.g: Debug mode for troubleshooting
-- Feature E.g: Proxy/Proxyless mode support
-- Feature E.g: Automatic token handling
-- Feature E.g: Custom password support
-- Feature E.g: Detailed logging system
-- Feature E.g: Account data saving (email:password format)
-- Feature E.g: Full account capture with account_id and external_id
+- **Automated Scraping**: Uses Patchright to interact with hCaptcha demos and capture challenge images.
+- **Smart Classification**: Heuristic-based classification of challenge types (Single Select, Multi Select, Drag & Drop).
+- **Multi-threaded**: Supports multiple workers for high-speed data collection.
+- **Proxy Support**: Robust proxy handling with support for various formats (IP:Port, User:Pass@IP:Port, etc.).
+- **Dataset Management**: Automated organization of captured images into structured folders based on challenge type and prompt.
+- **Utility Scripts**: Built-in scripts for dataset statistics and post-capture image organization.
+- **Configurable**: Easily adjust settings through `input/config.toml`.
+
+---
+
+### 📁 Directory Structure
+
+- `main.py`: The core automation engine that runs the scraper.
+- `input/`:
+  - `config.toml`: Main configuration file.
+  - `proxies.txt`: File containing proxies to use (one per line).
+- `scripts/`:
+  - `classify_images.py`: Re-scans the output folder to organize images using OCR and prompt heuristics.
+  - `stats.py`: Provides a detailed report on the current dataset (types, questions, image counts).
+- `output/`: Automatic directory where captured and classified images are stored.
 
 ---
 
 ### 📝 Usage
 
 1. **Configuration**:
-   Edit `input/config.toml`:
-
+   Edit `input/config.toml` to set your desired thread count, logging level, and ignore lists:
    ```toml
    [dev]
-   Debug = false
-   Proxyless = false
-   Threads = 1
-
-   [data]
-   password = "optional_custom_password"
-   email_verified = true
+   Proxyless = true   # Set to false to use proxies from input/proxies.txt
+   Debug = false      # Enable for detailed execution logs
+   Threads = 5        # Number of concurrent workers
+   minimal = true     # Only show core log messages
+   ignore_types = []  # List of challenge types to skip
    ```
 
-2. **Proxy Setup** (Optional):
-   - Add proxies to `input/proxies.txt` (one per line)
-   - Format: `ip:port` or `user:pass@ip:port`
-
-3. **Running the script**:
+2. **Run the Scraper**:
    ```bash
    python main.py
    ```
 
-4. **Output**:
-   - Created accounts are saved to `output/accounts.txt` (email:password)
-   - Detailed account info saved to `output/full_account_capture.txt` (email:password:account_id:external_id)
+3. **Get Dataset Stats**:
+   ```bash
+   python scripts/stats.py
+   ```
 
----
-
-### 📹 Preview
-
-![Preview](https://i.imgur.com/c7yeYrQ.gif)
+4. **Re-classify Images**:
+   ```bash
+   python scripts/classify_images.py --folder output/ --move
+   ```
 
 ---
 
 ### ❗ Disclaimers
 
-- This project is for educational purposes only
-- The author is not responsible for any misuse of this tool
-- Use responsibly and in accordance with Crunchyroll's terms of service
+- This project is for educational purposes only.
+- The author is not responsible for any misuse.
+- Ensure your use complies with the terms of service of any sites accessed.
 
 ---
 
 ### 📜 ChangeLog
 
 ```diff
-v0.0.1 ⋮ 12/26/2024
-! Initial release with email verification and proxy support
+v1.0.0 ⋮ 12/30/2024
++ Initial release of the comprehensive hCaptcha Challenger
++ Integrated multi-threading and proxy support
++ Added dataset management scripts
 ```
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/sexfrance/Crunchyroll-Account-Creator.svg?style=for-the-badge&labelColor=black&color=f429ff&logo=IOTA"/>
-  <img src="https://img.shields.io/github/stars/sexfrance/Crunchyroll-Account-Creator.svg?style=for-the-badge&labelColor=black&color=f429ff&logo=IOTA"/>
-  <img src="https://img.shields.io/github/languages/top/sexfrance/Crunchyroll-Account-Creator.svg?style=for-the-badge&labelColor=black&color=f429ff&logo=python"/>
+  <img src="https://img.shields.io/github/license/sexfrance/hcaptcha-challenger.svg?style=for-the-badge&labelColor=black&color=f429ff&logo=IOTA"/>
+  <img src="https://img.shields.io/github/stars/sexfrance/hcaptcha-challenger.svg?style=for-the-badge&labelColor=black&color=f429ff&logo=IOTA"/>
+  <img src="https://img.shields.io/github/languages/top/sexfrance/hcaptcha-challenger.svg?style=for-the-badge&labelColor=black&color=python"/>
 </p>

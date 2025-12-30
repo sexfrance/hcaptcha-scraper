@@ -14,7 +14,6 @@ import shutil
 import uuid
 import concurrent.futures
 from PIL import Image
-import pytesseract
 import traceback
 
 from logmagix import Logger
@@ -82,7 +81,6 @@ def debug(func_or_message, *args, **kwargs) -> callable:
         if DEBUG:
             logger.debug(f"Debug: {func_or_message}")
 
-
 @debug
 def obtain_lock_or_exit():
     # If lock exists, try to detect whether it's stale. If so, remove it.
@@ -132,8 +130,6 @@ def remove_lock():
     except Exception:
         pass
 
-
-
 @debug
 def process_existing_captures():
     """Process any existing raw captures in OUTPUT_DIR root (unclassified files)."""
@@ -151,7 +147,6 @@ def process_existing_captures():
                 _EXECUTOR.submit(process_and_save_background, path, "UNCLASSIFIED", None, time.time())
     except Exception as e:
         log.failure(f"Error while scanning existing captures: {repr(e)}")
-
 
 @debug
 def parse_proxy_line(line: str):
@@ -215,7 +210,6 @@ def parse_proxy_line(line: str):
 
     return None
 
-
 @debug
 def load_proxies(path: str):
     proxies = []
@@ -234,7 +228,6 @@ def load_proxies(path: str):
 
 @debug
 async def handle_retry(page, challenge_element=None):
-
     try:
         debug("Moving to another challenge...")
         # click a neutral spot (top-left small offset) to defocus the widget
@@ -273,7 +266,6 @@ async def handle_retry(page, challenge_element=None):
     except Exception as e:
         debug(f"handle_retry failed: {e}")
         return False
-
 
 @debug
 async def smart_reload_or_recover(page, challenge_element=None):
@@ -363,7 +355,6 @@ def save_image(image_path, classification, prompt):
     except Exception:
         pass
 
-
 @debug
 def is_blank_image(path: str, mean_threshold: int = 250, std_threshold: float = 6.0, sat_threshold: float = 20.0) -> bool:
     """Return True if the image at `path` is effectively blank/empty/loading (mostly uniform gray/white/black).
@@ -402,28 +393,10 @@ def is_blank_image(path: str, mean_threshold: int = 250, std_threshold: float = 
     except Exception:
         return False
 
-@debug
-def _ocr_image(path: str) -> str:
-    """Try to OCR the image using pytesseract if available; return extracted text or empty string."""
-    try:
-        img = Image.open(path)
-        w, h = img.size
-        crop_h = min(100, h)
-        # crop top 100 pixels where hCaptcha often places the prompt text
-        top_crop = img.crop((0, 0, w, crop_h))
-        text = pytesseract.image_to_string(top_crop)
-        text = (text or "").strip()
-        if text:
-            return text
-        # fallback to full-image OCR
-        text = pytesseract.image_to_string(img)
-        return (text or "").strip()
-    except Exception as e:
-        log.failure(f"OCR failed: {e}")
 
 @debug
 def process_and_save_background(image_path: str, type_hint: str, prompt_hint: str, start_time: float):
-    """Background worker: run OCR if available, decide prompt text, and save image to dataset."""
+    """Background worker: decide prompt text, and save image to dataset."""
     try:
         # Respect ignore lists from config: types
         try:
@@ -439,9 +412,8 @@ def process_and_save_background(image_path: str, type_hint: str, prompt_hint: st
                 pass
             return
 
-        # Run OCR to determine prompt and apply question-based ignores
-        ocr_text = _ocr_image(image_path)
-        prompt = ocr_text or (prompt_hint or "no_prompt")
+        # Use provided prompt
+        prompt = prompt_hint or "no_prompt"
         prompt = prompt.replace('\n', ' ').strip()  # remove newlines
 
         # Check ignore_questions (case-insensitive substring match)
@@ -458,7 +430,7 @@ def process_and_save_background(image_path: str, type_hint: str, prompt_hint: st
 
         # save image under detected type
         save_image(image_path, type_hint, prompt)
-        log.message("Hcaptcha Scraper", f"New CAPTCHA sample added to dataset: {type_hint} with OCR result: '{prompt}'", start_time, time.time())
+        log.message("Hcaptcha Scraper", f"New CAPTCHA sample added to dataset: {type_hint} with prompt: '{prompt}'", start_time, time.time())
         try:
             # remove the temporary capture file after copying
             if os.path.exists(image_path):
@@ -548,9 +520,8 @@ def classify_prompt(prompt_text: str) -> str:
         return 'IMAGE_LABEL_MULTI_SELECT'
     return 'IMAGE_LABEL_SINGLE_SELECT'
 
-
 @debug
-async def async_worker(thread_id: int):
+async def worker():
     log.info("Starting")
 
     # Load config
@@ -754,7 +725,20 @@ async def async_worker(thread_id: int):
                             # Try to extract textual prompt from the frame DOM before relying on OCR
                             frame_prompt_text = None
                             try:
-                                text = await challenge_frame.evaluate("() => document.body.innerText || ''")
+                                # Prefer the exact prompt element when available (avoid OCR)
+                                selector = (
+                                    "body > div.interface-wrapper > div.challenge-container > div > div > div > "
+                                    "div.challenge-prompt > div.prompt-padding > h2 > span"
+                                )
+                                try:
+                                    # Pass the selector as an argument into the page function
+                                    text = await challenge_frame.evaluate(
+                                        "sel => { const el = document.querySelector(sel); return el ? el.innerText : (document.body.innerText || ''); }",
+                                        selector,
+                                    )
+                                except Exception:
+                                    text = await challenge_frame.evaluate("() => document.body.innerText || ''")
+
                                 if text:
                                     text = text.strip()
                                     # pick the longest non-empty line (likely the prompt)
@@ -887,11 +871,10 @@ async def async_worker(thread_id: int):
                         log.warning("Failed to capture challenge after attempts; continuing")
                         continue
 
-                    # Local processing: prefer frame-extracted prompt, fall back to OCR
+                    # Local processing: use frame-extracted prompt
                     try:
-                        ocr_text = _ocr_image(challenge_image_path)
                         prompt_text = None
-                        # if we managed to extract text from the frame, prefer it
+                        # if we managed to extract text from the frame, use it
                         if 'frame_prompt_text' in locals() and frame_prompt_text:
                             prompt_text = frame_prompt_text
                             lt2 = (prompt_text or "").lower()
@@ -902,7 +885,7 @@ async def async_worker(thread_id: int):
                                     pass
                                 continue
                         else:
-                            prompt_text = ocr_text or "no_prompt"
+                            prompt_text = "no_prompt"
 
                         classification = classify_prompt(prompt_text)
                         # schedule background save/processing so capture loop is non-blocking
@@ -917,7 +900,6 @@ async def async_worker(thread_id: int):
                         except Exception:
                             pass
 
-                    await page.wait_for_timeout(800)
                     try:
                         await smart_reload_or_recover(page)
                     except Exception:
@@ -925,7 +907,6 @@ async def async_worker(thread_id: int):
                             await page.reload()
                         except Exception:
                             await page.goto(SITE_URL)
-                    await page.wait_for_timeout(500)
 
             except KeyboardInterrupt:
                 log.info("Processing loop interrupted by user")
@@ -955,7 +936,7 @@ def main():
     # Start worker threads
     worker_threads = []
     for i in range(threads):
-        t = threading.Thread(target=lambda i=i: asyncio.run(async_worker(i)))
+        t = threading.Thread(target=lambda i=i: asyncio.run(worker()))
         t.start()
         worker_threads.append(t)
 
